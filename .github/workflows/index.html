@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Block de Notas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 10px;
+        }
+
+        #note-container {
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #note-textarea {
+            width: calc(100% - 20px);
+            height: 150px;
+            resize: none;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        #note-button {
+            display: block;
+            width: calc(100% - 20px);
+            margin: 0 auto;
+            padding: 10px;
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+        }
+
+        #saved-notes {
+            margin-top: 20px;
+        }
+
+        .saved-note {
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .selected {
+            border: 2px solid blue;
+        }
+    </style>
+</head>
+<body>
+    <div id="note-container">
+        <textarea id="note-textarea" placeholder="Write your note here"></textarea>
+        <a id="note-button" href="#" onclick="saveNote()">Save Note</a>
+        <div id="result"></div>
+    </div>
+
+    <div id="saved-notes"></div>
+
+    <button id="delete-button" onclick="deleteSelectedNotes()" style="display: none;">Delete Selected Notes</button>
+
+    <script>
+        var touchStart;
+        var selectedNotes = [];
+
+        function saveNote() {
+            var note = document.getElementById("note-textarea").value;
+            var savedNotes = JSON.parse(localStorage.getItem("savedNotes")) || [];
+            savedNotes.push(note);
+            localStorage.setItem("savedNotes", JSON.stringify(savedNotes));
+            document.getElementById("result").innerText = "Note saved successfully!";
+            displaySavedNotes();
+        }
+
+        function displaySavedNotes() {
+            var savedNotesContainer = document.getElementById("saved-notes");
+            savedNotesContainer.innerHTML = "";
+            var savedNotes = JSON.parse(localStorage.getItem("savedNotes")) || [];
+            savedNotes.forEach(function(note, index) {
+                var noteElement = document.createElement("div");
+                noteElement.classList.add("saved-note");
+                noteElement.innerText = note;
+                noteElement.addEventListener("touchstart", function(e) {
+                    touchStart = Date.now();
+                    e.target.classList.toggle("selected");
+                    setTimeout(function() {
+                        var currentTime = Date.now();
+                        if (currentTime - touchStart >= 400) {
+                            selectedNotes.push(index);
+                            document.getElementById("delete-button").style.display = "block";
+                        }
+                    }, 400);
+                });
+                savedNotesContainer.appendChild(noteElement);
+            });
+        }
+
+        function deleteSelectedNotes() {
+            var savedNotes = JSON.parse(localStorage.getItem("savedNotes")) || [];
+            selectedNotes.sort((a, b) => b - a);
+            selectedNotes.forEach(function(index) {
+                savedNotes.splice(index, 1);
+            });
+            localStorage.setItem("savedNotes", JSON.stringify(savedNotes));
+            selectedNotes = [];
+            document.getElementById("delete-button").style.display = "none";
+            displaySavedNotes();
+        }
+
+        window.onload = function() {
+            displaySavedNotes();
+        };
+    </script>
+</body>
+</html>
